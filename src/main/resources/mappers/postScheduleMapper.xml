@@ -1,0 +1,335 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.travel.letsgospringboot.postschedule.repository.PostScheduleRepository">
+
+    <resultMap id="postScheduleResultMap" type="com.travel.letsgospringboot.postschedule.vo.PostScheduleListTO">
+        <result property="postId"       column="POST_ID"/>
+        <result property="title"        column="POST_TITLE"/>
+        <result property="likeCount"    column="LIKE_COUNT"/>
+        <result property="viewCount"    column="VIEW_COUNT"/>
+        <result property="isAnonymous"  column="IS_ANONYMOUS"/>
+        <result property="userName"     column="NAME"/>
+        <result property="visitItemId"  column="VISIT_ITEM_ID"/>
+        <result property="visitOrder"   column="VISIT_ORDER"/>
+        <result property="scheduleType" column="SCHEDULE_TYPE"/>
+        <result property="placeTitle"   column="PLACE_TITLE"/>
+        <result property="addr1"         column="ADDR1"/>
+        <result property="firstImage"   column="FIRST_IMAGE"/>
+        <result property="placeType"    column="PLACE_TYPE"/>
+    </resultMap>
+
+    <resultMap id="routeScheduleResultMap" type="com.travel.letsgospringboot.postschedule.vo.RouteScheduleTO">
+        <result property="visitId"        column="VISIT_ITEM_ID"/>
+        <result property="visitOrder"     column="VISIT_ORDER"/>
+        <result property="placeId"        column="PLACE_ID"/>
+        <result property="title"          column="TITLE"/>
+        <result property="distanceToNext" column="DISTANCE_TO_NEXT"/>
+        <result property="scheduleType"   column="SCHEDULE_TYPE"/>
+    </resultMap>
+
+    <resultMap id="mapScheduleResultMap" type="com.travel.letsgospringboot.postschedule.vo.MapScheduleTO">
+        <result property="visitOrder"      column="VISIT_ORDER"/>
+        <result property="title"           column="TITLE"/>
+        <result property="mapX"            column="MAPX"/>
+        <result property="mapY"            column="MAPY"/>
+        <result property="distanceToNext"  column="DISTANCE_TO_NEXT"/>
+    </resultMap>
+
+    <resultMap id="postScheduleDetailResultMap" type="com.travel.letsgospringboot.postschedule.vo.PostScheduleDetailTO">
+        <result property="postId"        column="POST_ID"/>
+        <result property="scheduleTitle" column="SCHEDULE_TITLE"/>
+        <result property="likeCount"     column="LIKE_COUNT"/>
+        <result property="viewCount"     column="VIEW_COUNT"/>
+        <result property="writerId"      column="WRITER_ID"/>
+        <result property="isHidden"      column="IS_HIDDEN"/>
+    </resultMap>
+
+
+
+    <sql id="postScheduleColumns">
+        p.POST_ID,
+        p.TITLE    AS POST_TITLE,
+        p.LIKE_COUNT,
+        p.VIEW_COUNT,
+        p.IS_ANONYMOUS,
+        u.NAME,
+        vp.VISIT_ITEM_ID,
+        vp.VISIT_ORDER,
+        vp.SCHEDULE_TYPE,
+        vp.PLACE_TITLE,
+        vp.ADDR1,
+        vp.FIRST_IMAGE,
+        vp.PLACE_TYPE
+    </sql>
+
+    <sql id="postScheduleJoins">
+        FROM schedule_post p
+        JOIN (
+            SELECT
+                v.SCHEDULE_ID,
+                MIN(v.VISIT_ITEM_ID) AS VISIT_ITEM_ID,
+                MIN(v.VISIT_ORDER) AS VISIT_ORDER,
+                MIN(v.SCHEDULE_TYPE) AS SCHEDULE_TYPE,
+                GROUP_CONCAT(pl.TITLE ORDER BY v.VISIT_ORDER SEPARATOR ' / ') AS PLACE_TITLE,
+                SUBSTRING_INDEX(GROUP_CONCAT(pl.ADDR1 ORDER BY v.VISIT_ORDER SEPARATOR '||'), '||', 1) AS ADDR1,
+                SUBSTRING_INDEX(GROUP_CONCAT(pl.FIRST_IMAGE ORDER BY v.VISIT_ORDER SEPARATOR '||'), '||', 1) AS FIRST_IMAGE,
+                SUBSTRING_INDEX(GROUP_CONCAT(pl.PLACE_TYPE ORDER BY v.VISIT_ORDER SEPARATOR '||'), '||', 1) AS PLACE_TYPE
+            FROM visit_item v
+            JOIN place pl ON v.PLACE_ID = pl.PLACE_ID
+            GROUP BY v.SCHEDULE_ID
+        ) vp ON p.POST_ID = vp.SCHEDULE_ID
+        JOIN jpa_users u ON p.user_id = u.userId
+    </sql>
+
+    <select id="getPostScheduleListLike" resultMap="postScheduleResultMap">
+        SELECT <include refid="postScheduleColumns"/>
+        <include refid="postScheduleJoins"/>
+        WHERE p.is_hidden = 0
+        ORDER BY p.like_count DESC, p.post_id ASC
+    </select>
+
+    <select id="getPostScheduleListView" resultMap="postScheduleResultMap">
+        SELECT <include refid="postScheduleColumns"/>
+        <include refid="postScheduleJoins"/>
+        WHERE p.is_hidden = 0
+        ORDER BY p.view_count DESC, p.post_id ASC
+    </select>
+
+    <select id="getPostScheduleListTitle" resultMap="postScheduleResultMap">
+        SELECT <include refid="postScheduleColumns"/>
+        <include refid="postScheduleJoins"/>
+        WHERE p.is_hidden = 0
+        ORDER BY p.title DESC, p.post_id ASC
+    </select>
+
+    <select id="getPostScheduleListLatest" resultMap="postScheduleResultMap">
+        SELECT <include refid="postScheduleColumns"/>
+        <include refid="postScheduleJoins"/>
+        WHERE p.is_hidden = 0
+        ORDER BY p.posted_at DESC, p.post_id ASC
+    </select>
+
+
+
+    <select id="getPostScheduleListSearchLike" parameterType="String" resultMap="postScheduleResultMap">
+        SELECT <include refid="postScheduleColumns"/>
+        <include refid="postScheduleJoins"/>
+        WHERE (p.TITLE LIKE CONCAT('%', #{keyword}, '%') OR vp.PLACE_TITLE LIKE CONCAT('%', #{keyword}, '%'))
+          AND p.is_hidden = 0
+        ORDER BY p.like_count DESC, p.post_id ASC
+    </select>
+
+    <select id="getPostScheduleListSearchView" parameterType="String" resultMap="postScheduleResultMap">
+        SELECT <include refid="postScheduleColumns"/>
+        <include refid="postScheduleJoins"/>
+        WHERE (p.TITLE LIKE CONCAT('%', #{keyword}, '%') OR vp.PLACE_TITLE LIKE CONCAT('%', #{keyword}, '%'))
+          AND p.is_hidden = 0
+        ORDER BY p.view_count DESC, p.post_id ASC
+    </select>
+
+    <select id="getPostScheduleListSearchTitle" parameterType="String" resultMap="postScheduleResultMap">
+        SELECT <include refid="postScheduleColumns"/>
+        <include refid="postScheduleJoins"/>
+        WHERE (p.TITLE LIKE CONCAT('%', #{keyword}, '%') OR vp.PLACE_TITLE LIKE CONCAT('%', #{keyword}, '%'))
+          AND p.is_hidden = 0
+        ORDER BY p.title DESC, p.post_id ASC
+    </select>
+
+    <select id="getPostScheduleListSearchLatest" parameterType="String" resultMap="postScheduleResultMap">
+        SELECT <include refid="postScheduleColumns"/>
+        <include refid="postScheduleJoins"/>
+        WHERE (p.TITLE LIKE CONCAT('%', #{keyword}, '%') OR vp.PLACE_TITLE LIKE CONCAT('%', #{keyword}, '%'))
+          AND p.is_hidden = 0
+        ORDER BY p.posted_at DESC, p.post_id ASC
+    </select>
+
+
+
+    <select id="getUserPostScheduleListLike" parameterType="String" resultMap="postScheduleResultMap">
+        SELECT <include refid="postScheduleColumns"/>
+        <include refid="postScheduleJoins"/>
+        WHERE p.USER_ID = #{userId}
+        ORDER BY p.like_count DESC, p.post_id ASC
+    </select>
+
+    <select id="getUserPostScheduleListView" parameterType="String" resultMap="postScheduleResultMap">
+        SELECT <include refid="postScheduleColumns"/>
+        <include refid="postScheduleJoins"/>
+        WHERE p.USER_ID = #{userId}
+        ORDER BY p.view_count DESC, p.post_id ASC
+    </select>
+
+    <select id="getUserPostScheduleListTitle" parameterType="String" resultMap="postScheduleResultMap">
+        SELECT <include refid="postScheduleColumns"/>
+        <include refid="postScheduleJoins"/>
+        WHERE p.USER_ID = #{userId}
+        ORDER BY p.title DESC, p.post_id ASC
+    </select>
+
+    <select id="getUserPostScheduleListLatest" parameterType="String" resultMap="postScheduleResultMap">
+        SELECT <include refid="postScheduleColumns"/>
+        <include refid="postScheduleJoins"/>
+        WHERE p.USER_ID = #{userId}
+        ORDER BY p.posted_at DESC, p.post_id ASC
+    </select>
+
+
+    <select id="getUserPostScheduleListSearchLike" parameterType="com.travel.letsgospringboot.postschedule.vo.PostScheduleSearchConditionVO" resultMap="postScheduleResultMap">
+        SELECT <include refid="postScheduleColumns"/>
+        <include refid="postScheduleJoins"/>
+        WHERE p.USER_ID = #{userId}
+          AND (p.TITLE LIKE CONCAT('%', #{keyword}, '%') OR vp.PLACE_TITLE LIKE CONCAT('%', #{keyword}, '%'))
+        ORDER BY p.like_count DESC, p.post_id ASC
+    </select>
+
+    <select id="getUserPostScheduleListSearchView" parameterType="com.travel.letsgospringboot.postschedule.vo.PostScheduleSearchConditionVO" resultMap="postScheduleResultMap">
+        SELECT <include refid="postScheduleColumns"/>
+        <include refid="postScheduleJoins"/>
+        WHERE p.USER_ID = #{userId}
+          AND (p.TITLE LIKE CONCAT('%', #{keyword}, '%') OR vp.PLACE_TITLE LIKE CONCAT('%', #{keyword}, '%'))
+        ORDER BY p.view_count DESC, p.post_id ASC
+    </select>
+
+    <select id="getUserPostScheduleListSearchTitle" parameterType="com.travel.letsgospringboot.postschedule.vo.PostScheduleSearchConditionVO" resultMap="postScheduleResultMap">
+        SELECT <include refid="postScheduleColumns"/>
+        <include refid="postScheduleJoins"/>
+        WHERE p.USER_ID = #{userId}
+          AND (p.TITLE LIKE CONCAT('%', #{keyword}, '%') OR vp.PLACE_TITLE LIKE CONCAT('%', #{keyword}, '%'))
+        ORDER BY p.title ASC, p.post_id ASC
+    </select>
+
+    <select id="getUserPostScheduleListSearchLatest" parameterType="com.travel.letsgospringboot.postschedule.vo.PostScheduleSearchConditionVO" resultMap="postScheduleResultMap">
+        SELECT <include refid="postScheduleColumns"/>
+        <include refid="postScheduleJoins"/>
+        WHERE p.USER_ID = #{userId}
+          AND (p.TITLE LIKE CONCAT('%', #{keyword}, '%') OR vp.PLACE_TITLE LIKE CONCAT('%', #{keyword}, '%'))
+        ORDER BY p.posted_at DESC, p.post_id ASC
+    </select>
+
+
+    <select id="getBudgetDetail" parameterType="String" resultType="String">
+        SELECT BUDGET_DETAILS FROM schedule_post WHERE POST_ID = #{postId}
+    </select>
+
+    <select id="getTodoDetail" parameterType="String" resultType="String">
+        SELECT TODO_DETAILS FROM schedule_post WHERE POST_ID = #{postId}
+    </select>
+
+    <select id="getScheduleRoute" parameterType="String" resultMap="routeScheduleResultMap">
+        SELECT v.VISIT_ITEM_ID, v.VISIT_ORDER, p.PLACE_ID, p.TITLE,
+               v.DISTANCE_TO_NEXT, v.SCHEDULE_TYPE
+        FROM schedule_post sp
+        JOIN visit_item v ON sp.POST_ID  = v.SCHEDULE_ID
+        JOIN place      p ON v.PLACE_ID  = p.PLACE_ID
+        WHERE sp.POST_ID = #{postId}
+        ORDER BY v.VISIT_ORDER ASC
+    </select>
+
+    <select id="getMapSchedule" parameterType="String" resultMap="mapScheduleResultMap">
+        SELECT p.TITLE, v.VISIT_ORDER, p.MAPX, p.MAPY, v.DISTANCE_TO_NEXT
+        FROM schedule_post sp
+        JOIN visit_item v ON sp.POST_ID = v.SCHEDULE_ID
+        JOIN place      p ON v.PLACE_ID = p.PLACE_ID
+        WHERE sp.POST_ID = #{postId}
+        ORDER BY v.VISIT_ORDER ASC
+    </select>
+
+    <select id="getPostScheduleDetail" parameterType="String" resultMap="postScheduleDetailResultMap">
+        SELECT
+            POST_ID,
+            TITLE AS SCHEDULE_TITLE,
+            LIKE_COUNT,
+            VIEW_COUNT,
+            USER_ID AS WRITER_ID,
+            IS_HIDDEN
+        FROM schedule_post
+        WHERE POST_ID = #{postId}
+    </select>
+
+    <select id="getScheduleTitle" parameterType="String" resultType="String">
+        SELECT TITLE FROM schedule_post WHERE POST_ID = #{postId}
+    </select>
+
+    <select id="getLikeCount" parameterType="String" resultType="int">
+        SELECT LIKE_COUNT FROM schedule_post WHERE POST_ID = #{postId}
+    </select>
+
+    <select id="getViewCount" parameterType="String" resultType="int">
+        SELECT VIEW_COUNT FROM schedule_post WHERE POST_ID = #{postId}
+    </select>
+
+    <select id="getUserId" parameterType="String" resultType="String">
+        SELECT USER_ID FROM schedule_post WHERE POST_ID = #{postId}
+    </select>
+
+    <select id="getPostScheduleId" parameterType="String" resultType="String">
+        SELECT p.POST_ID
+        FROM schedule_post p
+        WHERE p.IS_HIDDEN = 0
+          AND (
+            p.TITLE LIKE CONCAT('%', #{keyword}, '%')
+                OR EXISTS (
+                SELECT 1
+                FROM visit_item v
+                         JOIN place pl ON v.PLACE_ID = pl.PLACE_ID
+                WHERE v.SCHEDULE_ID = p.POST_ID
+                  AND pl.TITLE LIKE CONCAT('%', #{keyword}, '%')
+            )
+            )
+        ORDER BY p.POSTED_AT DESC, p.POST_ID ASC
+    </select>
+
+
+    <update id="plusLike" parameterType="String">
+        UPDATE schedule_post SET LIKE_COUNT = LIKE_COUNT + 1 WHERE POST_ID = #{postId}
+    </update>
+
+    <update id="plusView" parameterType="String">
+        UPDATE schedule_post SET VIEW_COUNT = VIEW_COUNT + 1 WHERE POST_ID = #{postId}
+    </update>
+
+
+
+
+    <delete id="deleteVisitItem" parameterType="String">
+        DELETE FROM visit_item WHERE schedule_id = #{postId}
+    </delete>
+
+    <delete id="deleteSchedulePost" parameterType="String">
+        DELETE FROM schedule_post WHERE post_ID = #{postId}
+    </delete>
+
+
+    <insert id="copyToMySchedule" parameterType="com.travel.letsgospringboot.postschedule.vo.CopyToMyScheduleVO">
+        <selectKey keyProperty="generatedId" resultType="String" order="BEFORE">
+            SELECT CONCAT('SCH', LPAD(NEXT VALUE FOR seq_my_schedule, 3, '0'))
+        </selectKey>
+        INSERT INTO my_schedule
+            (MY_SCHEDULE_ID, TITLE, START_AT, BUDGET_DETAILS, TODO_DETAILS, USER_ID, IS_SHARED)
+        VALUES
+            (#{generatedId}, #{title}, NOW(), #{budgetDetail}, #{todoDetail}, #{userId}, 0)
+    </insert>
+
+    <insert id="copyToVisitItem" parameterType="com.travel.letsgospringboot.postschedule.vo.CopyToVisitItemVO">
+        INSERT INTO visit_item
+            (VISIT_ORDER, DISTANCE_TO_NEXT, PLACE_ID, SCHEDULE_ID, SCHEDULE_TYPE)
+        VALUES
+            (#{visitOrder}, #{distanceToNext}, #{placeId}, #{myScheduleId}, #{scheduleType})
+    </insert>
+
+    <select id="countReport" resultType="int">
+        SELECT COUNT(POST_ID)
+        FROM report_schedule_post
+        WHERE POST_ID = #{postId}
+          AND REPORTER_ID = #{reporterId}
+    </select>
+
+    <insert id="reportPostSchedule" parameterType="com.travel.letsgospringboot.postschedule.vo.ReportPostScheduleVO">
+        INSERT INTO report_schedule_post
+            (POST_ID, REPORTER_ID, REASON, STATUS, REPORTED_AT)
+        VALUES
+            (#{postId}, #{reporterId}, #{reason}, #{status}, NOW())
+    </insert>
+
+</mapper>

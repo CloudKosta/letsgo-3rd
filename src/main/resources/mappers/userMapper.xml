@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.travel.letsgospringboot.user.repository.UserRepository">
+
+	<select id="login" parameterType="com.travel.letsgospringboot.user.vo.UserVO"
+			resultType="com.travel.letsgospringboot.user.vo.UserVO">
+		SELECT name, email FROM users
+		WHERE user_id = #{userID} AND password = #{password}
+	</select>
+
+	<insert id="signUp" parameterType="com.travel.letsgospringboot.user.vo.UserVO">
+		INSERT INTO users (user_id, email, name, password)
+		VALUES (#{userID}, #{email}, #{name}, #{password})
+	</insert>
+
+	<select id="idCheck" parameterType="String" resultType="boolean">
+		SELECT COUNT(user_id) > 0 FROM users
+		WHERE user_id = #{userID}
+	</select>
+
+	<update id="updatePassword" parameterType="com.travel.letsgospringboot.user.vo.UserVO">
+		UPDATE users SET password = #{password}
+		WHERE user_id = #{userID} AND email = #{email}
+	</update>
+
+	<select id="findUserIdByNameAndEmail" parameterType="com.travel.letsgospringboot.user.vo.UserVO"
+			resultType="String">
+		SELECT user_id FROM users
+		WHERE name = #{name} AND email = #{email}
+	</select>
+</mapper>

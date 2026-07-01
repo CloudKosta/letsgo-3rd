@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <link rel="stylesheet" th:href="@{/css/auth-common.css}">
+    <link rel="stylesheet" th:href="@{/css/updatepw.css}">
+    <meta charset="UTF-8">
+    <title>비밀번호 찾기</title>
+</head>
+<body>
+<button type="button" class="back-button" onclick="history.back()">뒤로가기</button>
+<div class="updatepwdbox">
+    <h1>비밀번호 찾기</h1>
+
+    <div id="updatePwMessage"></div>
+
+    <form id="updatePwForm" method="post">
+        <div class="id">
+            <input id="userIdInput" name="userID" placeholder="아이디">
+        </div>
+        <div class="emaile">
+            <input type="email" id="emailInput" name="email" placeholder="이메일">
+        </div>
+        <div class="pw">
+            <input type="password" id="newPasswordInput" name="password" placeholder="새비밀번호">
+        </div>
+        <div class="pw">
+            <input type="password" id="newPasswordConfirmInput" name="passwordConfirm" placeholder="새비밀번호 확인">
+        </div>
+        <div>
+            <button type="submit">비밀번호 변경</button>
+            <a th:href="@{/user/loginView}">로그인</a>
+        </div>
+    </form>
+</div>
+<script th:src="@{/js/updatepw.js}"></script>
+</body>
+</html>

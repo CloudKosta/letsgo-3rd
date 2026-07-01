@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8"/>
+    <title>내 일정 목록 - Let's GO!</title>
+    <link rel="stylesheet" th:href="@{/css/header.css}"/>
+    <link rel="stylesheet" th:href="@{/css/myScheduleList.css}"/>
+    <script th:src="@{/js/myScheduleList.js}" defer></script>
+</head>
+<body>
+
+<header class="site-header">
+    <div class="logo">
+        <a th:href="@{/}" title="Let's GO! 홈">
+            <img th:src="@{/logo/logo.png}" alt="Let's GO!" class="site-logo"/>
+        </a>
+    </div>
+
+    <ul class="menu" style="list-style: none; display: flex; padding: 0; margin: 0;">
+        <li><a th:href="@{/}">홈</a></li>
+        <li><a th:href="@{/places/leisure}">플레이스 조회</a></li>
+        <li><a th:href="@{/postschedule/list}">일정게시판</a></li>
+        <li><a th:href="@{/myschedule/list}">내일정</a></li>
+
+        <th:block sec:authorize="!isAuthenticated()">
+            <li><a th:href="@{/user/loginView}">로그인</a></li>
+        </th:block>
+        <th:block sec:authorize="isAuthenticated()">
+            <li class="user-name"
+                th:text="${#authentication.principal.user.name} + ' 님'">
+                사용자 님
+            </li>
+            <li>
+                <form th:action="@{/logout}" method="post" class="logout-form">
+                    <button type="submit" class="logout-btn">
+                        로그아웃
+                    </button>
+                </form>
+            </li>
+        </th:block>
+    </ul>
+</header>
+<div class="layout-wrapper">
+    <aside class="sidebar">
+        <ul>
+            <li>
+                <button type="button" class="nav-btn" data-filter="all">전체 일정</button>
+            </li>
+            <li>
+                <button type="button" class="nav-btn" data-filter="shared">공유된 일정</button>
+            </li>
+        </ul>
+    </aside>
+
+    <main>
+        <div class="content-left">
+            <div class="search-area">
+                <input type="text" placeholder="장소 이름이나 일정 이름을 검색하세요" name="searchTitle"/>
+                <button type="button" id="searchPlaces">검색하기</button>
+                <div class="sort-area">
+                    <select name="sortOrder">
+                        <option value="">날짜순</option>
+                        <option value="title">이름순</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="container" id="scheduleListContainer"></div>
+
+        <div id="pagination" class="pagination"></div>
+
+    </main>
+</div>
+
+
+</body>
+</html>

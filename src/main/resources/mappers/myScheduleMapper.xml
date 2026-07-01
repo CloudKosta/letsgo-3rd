@@ -1,0 +1,421 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.travel.letsgospringboot.myschedule.repository.MyScheduleRepository">
+
+    <resultMap id="myScheduleResultMap" type="com.travel.letsgospringboot.myschedule.vo.MyScheduleVO">
+        <constructor>
+            <arg column="my_schedule_id" javaType="String"/>
+            <arg column="sch_title" javaType="String"/>
+            <arg column="start_at" javaType="String"/>
+            <arg column="is_shared" javaType="String"/>
+            <arg column="place_title" javaType="String"/>
+            <arg column="addr1" javaType="String"/>
+            <arg column="first_image" javaType="String"/>
+        </constructor>
+    </resultMap>
+
+    <resultMap id="routeScheduleResultMap" type="com.travel.letsgospringboot.myschedule.vo.RouteScheduleVO">
+        <id column="visit_item_id" property="visitId"/>
+        <result column="visit_order" property="visitOrder"/>
+        <result column="place_id" property="placeId"/>
+        <result column="title" property="title"/>
+    </resultMap>
+
+    <resultMap id="mapScheduleResultMap" type="com.travel.letsgospringboot.myschedule.vo.MapScheduleVO">
+        <constructor>
+            <arg column="visit_order" javaType="String"/>
+            <arg column="title" javaType="String"/>
+            <arg column="mapx" javaType="String"/>
+            <arg column="mapy" javaType="String"/>
+            <arg column="distance_to_next" javaType="String"/>
+        </constructor>
+    </resultMap>
+
+    <resultMap id="colleagueResultMap" type="com.travel.letsgospringboot.myschedule.vo.ColleagueVO">
+        <constructor>
+            <arg column="userid" javaType="String"/>
+            <arg column="name" javaType="String"/>
+            <arg column="email" javaType="String"/>
+            <arg column="permission" javaType="String"/>
+        </constructor>
+    </resultMap>
+
+    <sql id="scheduleColumns">
+        s.my_schedule_id,
+        s.title AS sch_title,
+        s.start_at,
+        s.is_shared,
+        p.title AS place_title,
+        p.addr1,
+        p.first_image,
+        v.visit_order
+    </sql>
+
+    <sql id="scheduleJoins">
+        FROM my_schedule s
+        JOIN visit_item v ON s.my_schedule_id = v.schedule_id
+        JOIN place p ON v.place_id = p.place_id
+    </sql>
+
+    <sql id="groupedColumns">
+        t.my_schedule_id,
+        t.sch_title,
+        MAX(t.start_at) AS start_at,
+        MAX(t.is_shared) AS is_shared,
+        GROUP_CONCAT(t.place_title ORDER BY t.visit_order SEPARATOR ' / ') AS place_title,
+        SUBSTRING_INDEX(GROUP_CONCAT(t.addr1 ORDER BY t.visit_order SEPARATOR '||'), '||', 1) AS addr1,
+        SUBSTRING_INDEX(GROUP_CONCAT(t.first_image ORDER BY t.visit_order SEPARATOR '||'), '||', 1) AS first_image
+    </sql>
+
+    <select id="getMyScheduleListAllByDate" parameterType="String" resultMap="myScheduleResultMap">
+        SELECT <include refid="groupedColumns"/>
+        FROM (
+            SELECT <include refid="scheduleColumns"/>
+            <include refid="scheduleJoins"/>
+            WHERE s.user_id = #{userId}
+            UNION
+            SELECT <include refid="scheduleColumns"/>
+            <include refid="scheduleJoins"/>
+            JOIN schedule_share_user ssu ON s.my_schedule_id = ssu.my_schedule_id
+            WHERE ssu.shared_user_id = #{userId}
+        ) t
+        GROUP BY t.my_schedule_id, t.sch_title
+        ORDER BY start_at DESC
+    </select>
+
+    <select id="getMyScheduleListAllByTitle" parameterType="String" resultMap="myScheduleResultMap">
+        SELECT <include refid="groupedColumns"/>
+        FROM (
+            SELECT <include refid="scheduleColumns"/>
+            <include refid="scheduleJoins"/>
+            WHERE s.user_id = #{userId}
+            UNION
+            SELECT <include refid="scheduleColumns"/>
+            <include refid="scheduleJoins"/>
+            JOIN schedule_share_user ssu ON s.my_schedule_id = ssu.my_schedule_id
+            WHERE ssu.shared_user_id = #{userId}
+        ) t
+        GROUP BY t.my_schedule_id, t.sch_title
+        ORDER BY sch_title ASC
+    </select>
+
+    <select id="getMyScheduleListSharedByDate" parameterType="String" resultMap="myScheduleResultMap">
+        SELECT <include refid="groupedColumns"/>
+        FROM (
+            SELECT <include refid="scheduleColumns"/>
+            <include refid="scheduleJoins"/>
+            WHERE s.user_id = #{userId} AND s.is_shared = 1
+            UNION
+            SELECT <include refid="scheduleColumns"/>
+            <include refid="scheduleJoins"/>
+            JOIN schedule_share_user ssu ON s.my_schedule_id = ssu.my_schedule_id
+            WHERE ssu.shared_user_id = #{userId}
+        ) t
+        GROUP BY t.my_schedule_id, t.sch_title
+        ORDER BY start_at DESC
+    </select>
+
+    <select id="getMyScheduleListSharedByTitle" parameterType="String" resultMap="myScheduleResultMap">
+        SELECT <include refid="groupedColumns"/>
+        FROM (
+            SELECT <include refid="scheduleColumns"/>
+            <include refid="scheduleJoins"/>
+            WHERE s.user_id = #{userId} AND s.is_shared = 1
+            UNION
+            SELECT <include refid="scheduleColumns"/>
+            <include refid="scheduleJoins"/>
+            JOIN schedule_share_user ssu ON s.my_schedule_id = ssu.my_schedule_id
+            WHERE ssu.shared_user_id = #{userId}
+        ) t
+        GROUP BY t.my_schedule_id, t.sch_title
+        ORDER BY sch_title ASC
+    </select>
+
+    <select id="getMyScheduleListSearchByDate" parameterType="map" resultMap="myScheduleResultMap">
+        SELECT <include refid="groupedColumns"/>
+        FROM (
+            SELECT <include refid="scheduleColumns"/>
+            <include refid="scheduleJoins"/>
+            WHERE s.user_id = #{userId} AND (s.title LIKE CONCAT('%', #{keyword}, '%') OR p.title LIKE CONCAT('%', #{keyword}, '%'))
+            UNION
+            SELECT <include refid="scheduleColumns"/>
+            <include refid="scheduleJoins"/>
+            JOIN schedule_share_user ssu ON s.my_schedule_id = ssu.my_schedule_id
+            WHERE ssu.shared_user_id = #{userId} AND (s.title LIKE CONCAT('%', #{keyword}, '%') OR p.title LIKE CONCAT('%', #{keyword}, '%'))
+        ) t
+        GROUP BY t.my_schedule_id, t.sch_title
+        ORDER BY start_at DESC
+    </select>
+
+    <select id="getMyScheduleListSearchByTitle" parameterType="map" resultMap="myScheduleResultMap">
+        SELECT <include refid="groupedColumns"/>
+        FROM (
+            SELECT <include refid="scheduleColumns"/>
+            <include refid="scheduleJoins"/>
+            WHERE s.user_id = #{userId} AND (s.title LIKE CONCAT('%', #{keyword}, '%') OR p.title LIKE CONCAT('%', #{keyword}, '%'))
+            UNION
+            SELECT <include refid="scheduleColumns"/>
+            <include refid="scheduleJoins"/>
+            JOIN schedule_share_user ssu ON s.my_schedule_id = ssu.my_schedule_id
+            WHERE ssu.shared_user_id = #{userId} AND (s.title LIKE CONCAT('%', #{keyword}, '%') OR p.title LIKE CONCAT('%', #{keyword}, '%'))
+        ) t
+        GROUP BY t.my_schedule_id, t.sch_title
+        ORDER BY sch_title ASC
+    </select>
+
+    <select id="getMyScheduleListSearchSharedByDate" parameterType="map" resultMap="myScheduleResultMap">
+        SELECT <include refid="groupedColumns"/>
+        FROM (
+            SELECT <include refid="scheduleColumns"/>
+            <include refid="scheduleJoins"/>
+            WHERE s.user_id = #{userId} AND s.is_shared = 1
+            AND (s.title LIKE CONCAT('%', #{keyword}, '%') OR p.title LIKE CONCAT('%', #{keyword}, '%'))
+            UNION
+            SELECT <include refid="scheduleColumns"/>
+            <include refid="scheduleJoins"/>
+            JOIN schedule_share_user ssu ON s.my_schedule_id = ssu.my_schedule_id
+            WHERE ssu.shared_user_id = #{userId} AND (s.title LIKE CONCAT('%', #{keyword}, '%') OR p.title LIKE CONCAT('%', #{keyword}, '%'))
+        ) t
+        GROUP BY t.my_schedule_id, t.sch_title
+        ORDER BY start_at DESC
+    </select>
+
+    <select id="getMyScheduleListSearchSharedByTitle" parameterType="map" resultMap="myScheduleResultMap">
+        SELECT <include refid="groupedColumns"/>
+        FROM (
+            SELECT <include refid="scheduleColumns"/>
+            <include refid="scheduleJoins"/>
+            WHERE s.user_id = #{userId} AND s.is_shared = 1
+            AND (s.title LIKE CONCAT('%', #{keyword}, '%') OR p.title LIKE CONCAT('%', #{keyword}, '%'))
+            UNION
+            SELECT <include refid="scheduleColumns"/>
+            <include refid="scheduleJoins"/>
+            JOIN schedule_share_user ssu ON s.my_schedule_id = ssu.my_schedule_id
+            WHERE ssu.shared_user_id = #{userId} AND (s.title LIKE CONCAT('%', #{keyword}, '%') OR p.title LIKE CONCAT('%', #{keyword}, '%'))
+        ) t
+        GROUP BY t.my_schedule_id, t.sch_title
+        ORDER BY sch_title ASC
+    </select>
+
+    <delete id="deleteVisitItemsByScheduleId" parameterType="String">
+        DELETE
+        FROM visit_item
+        WHERE schedule_id = #{scheduleId}
+    </delete>
+
+    <delete id="deleteScheduleById" parameterType="String">
+        DELETE
+        FROM my_schedule
+        WHERE my_schedule_id = #{scheduleId}
+    </delete>
+
+    <delete id="deleteScheduleByIdAndUserId" parameterType="map">
+        DELETE
+        FROM my_schedule
+        WHERE my_schedule_id = #{scheduleId}
+          AND user_id = #{userId}
+    </delete>
+
+    <update id="updateVisitItem" parameterType="map">
+        UPDATE visit_item
+        SET visit_order      = #{visitOrder},
+            distance_to_next = #{distanceToNext}
+        WHERE visit_item_id = #{visitItemId}
+    </update>
+
+    <update id="updateSchedule" parameterType="map">
+        UPDATE my_schedule
+        SET title          = #{scheduleTitle},
+            start_at       = #{startAt},
+            budget_details = #{budgetDetail},
+            todo_details   = #{todoDetail},
+            is_shared      = #{isShared}
+        WHERE my_schedule_id = #{scheduleId}
+          AND user_id = #{userId}
+    </update>
+
+    <update id="setMyScheduleTitle" parameterType="com.travel.letsgospringboot.myschedule.vo.ScheduleTitleUpdateVO">
+        UPDATE my_schedule
+        SET title = #{title}
+        WHERE my_schedule_id = #{scheduleId}
+          AND user_id = #{userId}
+    </update>
+
+    <update id="setTodoDetail" parameterType="map">
+        UPDATE my_schedule
+        SET todo_details = #{todoDetail}
+        WHERE my_schedule_id = #{scheduleId}
+    </update>
+
+    <update id="setBudgetDetail" parameterType="map">
+        UPDATE my_schedule
+        SET budget_details = #{budgetDetail}
+        WHERE my_schedule_id = #{scheduleId}
+    </update>
+
+    <update id="setStartAt" parameterType="com.travel.letsgospringboot.myschedule.vo.StartAtUpdateVO">
+        UPDATE my_schedule
+        SET start_at = STR_TO_DATE(#{startAt}, '%Y-%m-%d')
+        WHERE my_schedule_id = #{scheduleId}
+          AND user_id = #{userId}
+    </update>
+
+    <update id="setCompanionPermission" parameterType="map">
+        UPDATE schedule_share_user
+        SET permission = #{permission}
+        WHERE my_schedule_id = #{myScheduleId}
+          AND shared_user_id = #{sharedUserId}
+    </update>
+
+    <select id="getScheduleDetail" parameterType="String"
+            resultType="com.travel.letsgospringboot.myschedule.vo.ScheduleDetailVO">
+        SELECT title                             AS scheduleTitle,
+               DATE_FORMAT(start_at, '%Y-%m-%d') AS startAt,
+               budget_details                    AS budgetDetail,
+               todo_details                      AS todoDetail
+        FROM my_schedule
+        WHERE my_schedule_id = #{scheduleId}
+    </select>
+
+    <select id="getTodoDetail" parameterType="String" resultType="String">
+        SELECT todo_details
+        FROM my_schedule
+        WHERE my_schedule_id = #{scheduleId}
+    </select>
+
+    <select id="getBudgetDetail" parameterType="String" resultType="String">
+        SELECT budget_details
+        FROM my_schedule
+        WHERE my_schedule_id = #{scheduleId}
+    </select>
+
+    <select id="getScheduleTitle" parameterType="String" resultType="String">
+        SELECT title
+        FROM my_schedule
+        WHERE my_schedule_id = #{scheduleId}
+    </select>
+
+    <select id="getStartAt" parameterType="String" resultType="String">
+        SELECT DATE_FORMAT(start_at, '%Y-%m-%d')
+        FROM my_schedule
+        WHERE my_schedule_id = #{scheduleId}
+    </select>
+
+    <select id="getNextMyScheduleIdCandidate" resultType="String">
+        SELECT CONCAT('S', LPAD(NEXTVAL(seq_my_schedule), 3, '0'))
+    </select>
+
+    <select id="checkMyScheduleIdExists" parameterType="String" resultType="int">
+        SELECT COUNT(my_schedule_id)
+        FROM my_schedule
+        WHERE my_schedule_id = #{id}
+    </select>
+
+    <select id="getLastPostId" resultType="String">
+        SELECT CONCAT('P', LPAD(LASTVAL(seq_schedule_post), 3, '0'))
+    </select>
+
+    <insert id="addMySchedule" parameterType="com.travel.letsgospringboot.myschedule.vo.ScheduleCreateVO">
+        INSERT INTO my_schedule (my_schedule_id, title, start_at, user_id, is_shared)
+        VALUES (#{myScheduleId}, #{title}, NOW(), #{userId}, 0)
+    </insert>
+
+    <insert id="addVisitItem" parameterType="map">
+        INSERT INTO visit_item (visit_order, schedule_type, place_id, schedule_id)
+        VALUES (#{visitOrder}, 'SCHEDULE', #{placeId}, #{scheduleId})
+    </insert>
+
+    <insert id="addCompanion" parameterType="map">
+        INSERT INTO schedule_share_user (share_id, permission, my_schedule_id, shared_user_id)
+        VALUES (NEXTVAL(seq_schedule_share_user), 'R', #{myScheduleId}, #{sharedUserId})
+    </insert>
+
+    <update id="markScheduleShared" parameterType="String">
+        UPDATE my_schedule
+        SET is_shared = 1
+        WHERE my_schedule_id = #{myScheduleId}
+    </update>
+
+    <insert id="shareToPostInsert" parameterType="com.travel.letsgospringboot.myschedule.vo.ShareVO">
+        INSERT INTO schedule_post
+        (post_id, title, budget_details, todo_details, is_anonymous, view_count, like_count, posted_at, user_id)
+        SELECT CONCAT('P', LPAD(NEXTVAL(seq_schedule_post), 3, '0')),
+               title,
+               budget_details,
+               todo_details,
+               #{isAnonymous},
+               0,
+               0,
+               NOW(),
+               #{userId}
+        FROM my_schedule
+        WHERE my_schedule_id = #{scheduleId}
+    </insert>
+
+    <insert id="shareVisitItemsToPost" parameterType="String">
+        INSERT INTO visit_item (visit_order, distance_to_next, schedule_type, place_id, schedule_id)
+        SELECT visit_order,
+               distance_to_next,
+               'POST',
+               place_id,
+               CONCAT('P', LPAD(LASTVAL(seq_schedule_post), 3, '0'))
+        FROM visit_item
+        WHERE schedule_id = #{myScheduleId}
+    </insert>
+
+    <select id="isScheduleOwnedByUser" parameterType="map" resultType="int">
+        SELECT COUNT(my_schedule_id)
+        FROM my_schedule
+        WHERE my_schedule_id = #{scheduleId}
+          AND user_id = #{userId}
+    </select>
+
+    <select id="hasReadSchedulePermission" parameterType="map" resultType="int">
+        SELECT COUNT(m.my_schedule_id)
+        FROM my_schedule m
+        LEFT JOIN schedule_share_user s ON m.my_schedule_id = s.my_schedule_id
+        WHERE m.my_schedule_id = #{scheduleId}
+          AND (m.user_id = #{userId} OR s.shared_user_id = #{userId})
+    </select>
+
+    <select id="listMyScheduleIdAndTitle" parameterType="String"
+            resultType="com.travel.letsgospringboot.myschedule.vo.ScheduleSummaryVO">
+        SELECT my_schedule_id AS myScheduleId, title
+        FROM my_schedule
+        WHERE user_id = #{userId}
+        ORDER BY start_at DESC, my_schedule_id DESC
+    </select>
+
+    <select id="getScheduleRoute" parameterType="String" resultMap="routeScheduleResultMap">
+        SELECT v.visit_item_id, v.visit_order, p.place_id, p.title
+        FROM my_schedule s
+                 JOIN visit_item v ON s.my_schedule_id = v.schedule_id
+                 JOIN place p ON v.place_id = p.place_id
+        WHERE v.schedule_id = #{scheduleId}
+        ORDER BY v.visit_order ASC
+    </select>
+
+    <select id="getMapSchedule" parameterType="String" resultMap="mapScheduleResultMap">
+        SELECT p.title, v.visit_order, p.mapx, p.mapy, v.distance_to_next
+        FROM my_schedule s
+                 JOIN visit_item v ON s.my_schedule_id = v.schedule_id
+                 JOIN place p ON v.place_id = p.place_id
+        WHERE s.my_schedule_id = #{scheduleId}
+        ORDER BY v.visit_order ASC
+    </select>
+
+    <delete id="deleteVisitItemById" parameterType="String">
+        DELETE
+        FROM visit_item
+        WHERE visit_item_id = #{visitItemId}
+    </delete>
+
+    <select id="getCompanionList" parameterType="String" resultMap="colleagueResultMap">
+        SELECT u.userid, u.name, u.email, ssu.permission
+        FROM schedule_share_user ssu
+                 JOIN jpa_users u ON ssu.shared_user_id = u.userid
+        WHERE ssu.my_schedule_id = #{myScheduleId}
+    </select>
+
+</mapper>
