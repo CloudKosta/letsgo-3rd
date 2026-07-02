@@ -63,6 +63,11 @@ public class SecurityConfig {
                 .permitAll()
         );
 
+        http.oauth2Login(oauthLogin ->
+                oauthLogin.loginPage("/user/loginView")
+                        .defaultSuccessUrl("/user/addUser", true)
+        );
+
         http.logout(logout
                 -> logout.logoutUrl("/logout")
                 .logoutSuccessUrl("/")

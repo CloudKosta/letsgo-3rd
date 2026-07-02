@@ -187,4 +187,3 @@ INSERT INTO schedule_share_user (share_id, permission, my_schedule_id, shared_us
 INSERT INTO schedule_share_user (share_id, permission, my_schedule_id, shared_user_id) VALUES (NEXT VALUE FOR seq_schedule_share_user, 'R', 'S008', 'user09');
 INSERT INTO schedule_share_user (share_id, permission, my_schedule_id, shared_user_id) VALUES (NEXT VALUE FOR seq_schedule_share_user, 'W', 'S009', 'user02');
 INSERT INTO schedule_share_user (share_id, permission, my_schedule_id, shared_user_id) VALUES (NEXT VALUE FOR seq_schedule_share_user, 'R', 'S010', 'user04');
-
