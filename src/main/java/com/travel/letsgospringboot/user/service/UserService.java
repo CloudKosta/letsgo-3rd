@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.List;
+import java.util.UUID;
 import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
@@ -77,6 +78,23 @@ public class UserService {
             log.info("사용자 회원가입 성공: userID={}", userVO.getUserID());
         }
         return success;
+    }
+
+    @Transactional
+    public JpaUsers findOrCreateOAuthUser(String email, String name, String providerId) {
+        JpaUsers user = userJpaRepository.findByEmail(email);
+        if (user != null) {
+            return user;
+        }
+        JpaUsers created = userJpaRepository.save(JpaUsers.builder()
+                .userID("google_" + providerId)
+                .password(bCryptPasswordEncoder.encode(UUID.randomUUID().toString()))
+                .email(email)
+                .name(name)
+                .role("ROLE_USER")
+                .build());
+        log.info("구글 OAuth 회원가입 성공: userID={}", created.getUserID());
+        return created;
     }
 
     public boolean idCheck(String userID) {

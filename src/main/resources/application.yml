@@ -15,15 +15,15 @@ spring:
     user:
       name: admin
       password: 1234
-#    oauth2:
-#      client:
-#        registration:
-#          google:
-#            client-id: ${GOOGLE_CLIENT_ID}
-#            client-secret: ${GOOGLE_CLIENT_SECRET}
-#            scope:
-#              - profile
-#              - email
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope:
+              - profile
+              - email
   jpa:
     open-in-view: false
     generate-ddl: true
@@ -47,6 +47,10 @@ logging:
 
 tour:
   service-key: ${SERVICE_KEY}
+
+app:
+  oauth2:
+    redirect-uri: http://127.0.0.1:5432/oauth/callback
 
 server:
   port: 5531

@@ -37,7 +37,7 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationManager authenticationManager
-            , UserJpaRepository userJpaRepository) throws Exception {
+            , UserJpaRepository userJpaRepository, OAuth2SuccessHandler oAuth2SuccessHandler) throws Exception {
 
         http.csrf(csrf -> csrf
                 .disable()
@@ -63,10 +63,9 @@ public class SecurityConfig {
         http.addFilter(new JwtAuthorization(authenticationManager, userJpaRepository));
 
 
-//        http.oauth2Login(oauthLogin ->
-//                oauthLogin.loginPage("/user/loginView")
-//                        .defaultSuccessUrl("/user/addUser", true)
-//        );
+        http.oauth2Login(oauth2 -> oauth2
+                .successHandler(oAuth2SuccessHandler)
+        );
 
 //        http.logout(logout
 //                -> logout.logoutUrl("/logout")
