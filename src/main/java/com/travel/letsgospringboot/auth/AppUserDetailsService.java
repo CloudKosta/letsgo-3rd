@@ -1,4 +1,4 @@
-package com.travel.letsgospringboot.user.auth;
+package com.travel.letsgospringboot.auth;
 
 import com.travel.letsgospringboot.user.repository.JpaUsers;
 import com.travel.letsgospringboot.user.repository.UserJpaRepository;

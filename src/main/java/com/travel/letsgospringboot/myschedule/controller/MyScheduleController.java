@@ -1,7 +1,7 @@
 package com.travel.letsgospringboot.myschedule.controller;
 
 import com.travel.letsgospringboot.myschedule.service.MyScheduleService;
-import com.travel.letsgospringboot.user.auth.AppUserDetails;
+import com.travel.letsgospringboot.auth.AppUserDetails;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

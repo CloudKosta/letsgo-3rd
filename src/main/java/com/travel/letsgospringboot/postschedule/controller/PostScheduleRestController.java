@@ -5,7 +5,7 @@ import com.travel.letsgospringboot.postschedule.service.PostScheduleService;
 import com.travel.letsgospringboot.postschedule.vo.MapScheduleTO;
 import com.travel.letsgospringboot.postschedule.vo.PostScheduleListTO;
 import com.travel.letsgospringboot.postschedule.vo.RouteScheduleTO;
-import com.travel.letsgospringboot.user.auth.AppUserDetails;
+import com.travel.letsgospringboot.auth.AppUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

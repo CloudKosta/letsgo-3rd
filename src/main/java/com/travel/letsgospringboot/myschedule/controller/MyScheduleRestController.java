@@ -4,7 +4,7 @@ import com.travel.letsgospringboot.common.PageResponse;
 import com.travel.letsgospringboot.myschedule.controller.request.*;
 import com.travel.letsgospringboot.myschedule.service.MyScheduleService;
 import com.travel.letsgospringboot.myschedule.vo.*;
-import com.travel.letsgospringboot.user.auth.AppUserDetails;
+import com.travel.letsgospringboot.auth.AppUserDetails;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

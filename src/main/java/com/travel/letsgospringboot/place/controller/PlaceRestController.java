@@ -3,7 +3,7 @@ package com.travel.letsgospringboot.place.controller;
 import com.travel.letsgospringboot.common.PageResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import com.travel.letsgospringboot.user.auth.AppUserDetails;
+import com.travel.letsgospringboot.auth.AppUserDetails;
 
 import com.travel.letsgospringboot.place.service.PlaceService;
 import com.travel.letsgospringboot.place.vo.PlaceVO;

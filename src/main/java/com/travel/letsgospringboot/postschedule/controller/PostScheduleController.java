@@ -3,7 +3,7 @@ package com.travel.letsgospringboot.postschedule.controller;
 import com.travel.letsgospringboot.common.PageResponse;
 import com.travel.letsgospringboot.postschedule.service.PostScheduleService;
 import com.travel.letsgospringboot.postschedule.vo.PostScheduleListTO;
-import com.travel.letsgospringboot.user.auth.AppUserDetails;
+import com.travel.letsgospringboot.auth.AppUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;

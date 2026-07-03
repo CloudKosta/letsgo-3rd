@@ -19,6 +19,8 @@ public class UserRestController {
 
     private final UserService userService;
 
+
+
     @PostMapping("/signUpAjax")
     public ResponseEntity<Map<String, Object>> signUpAjax(UserRequest userRequest) {
         String userId = userRequest.getUserID();
