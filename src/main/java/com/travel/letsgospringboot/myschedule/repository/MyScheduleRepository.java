@@ -62,6 +62,10 @@ public interface MyScheduleRepository {
 
     boolean markScheduleShared(String myScheduleId);
 
+    boolean unmarkScheduleShared(String myScheduleId);
+
+    int countCompanions(String myScheduleId);
+
     // ---- 단건 조회 ----
     ScheduleDetailVO getScheduleDetail(String scheduleId);
 
@@ -95,6 +99,8 @@ public interface MyScheduleRepository {
     boolean addCompanion(String myScheduleId, String sharedUserId);
 
     boolean leaveSharedSchedule(String scheduleId, String userId);
+
+    boolean removeCompanion(String myScheduleId, String sharedUserId);
 
     int shareToPostInsert(ShareVO shareVO);
 

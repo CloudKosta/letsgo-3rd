@@ -130,6 +130,13 @@ public class MyScheduleRestController {
                 userDetails.getUsername());
     }
 
+    @DeleteMapping("/{scheduleId}/companion/{sharedUserId}")
+    public boolean removeCompanion(@PathVariable String scheduleId,
+                                   @PathVariable String sharedUserId,
+                                   @AuthenticationPrincipal AppUserDetails userDetails) {
+        return myScheduleService.removeCompanion(scheduleId, sharedUserId, userDetails.getUsername());
+    }
+
     @PutMapping("/{scheduleId}/companion/permission")
     public boolean setCompanionPermission(@PathVariable String scheduleId,
                                           @RequestBody CompanionPermissionRequest companionPermissionRequest,

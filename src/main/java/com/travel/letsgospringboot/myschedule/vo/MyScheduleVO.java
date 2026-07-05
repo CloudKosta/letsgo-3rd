@@ -15,4 +15,5 @@ public class MyScheduleVO {
     private String placeTitle;
     private String addr1;
     private String firstImage;
+    private String ownerId;
 }

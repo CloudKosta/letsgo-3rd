@@ -47,8 +47,15 @@ public class JwtAuthorization extends BasicAuthenticationFilter {
                 }
             }
         } catch (JWTVerificationException e) {
+            // 토큰이 있으나 만료/무효인 경우: 프론트가 세션 만료를 인지하고 재로그인하도록 401을 명확히 반환한다.
             logger.warn("JWT 검증 실패: " + e.getMessage());
-}
+            SecurityContextHolder.clearContext();
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            response.getWriter().write("{\"message\":\"토큰이 만료되었거나 유효하지 않습니다.\"}");
+            return;
+        }
 
         chain.doFilter(request, response);
     }

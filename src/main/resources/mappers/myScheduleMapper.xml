@@ -12,6 +12,7 @@
             <arg column="place_title" javaType="String"/>
             <arg column="addr1" javaType="String"/>
             <arg column="first_image" javaType="String"/>
+            <arg column="owner_id" javaType="String"/>
         </constructor>
     </resultMap>
 
@@ -20,6 +21,7 @@
         <result column="visit_order" property="visitOrder"/>
         <result column="place_id" property="placeId"/>
         <result column="title" property="title"/>
+        <result column="distance_to_next" property="distanceToNext"/>
     </resultMap>
 
     <resultMap id="mapScheduleResultMap" type="com.travel.letsgospringboot.myschedule.vo.MapScheduleVO">
@@ -46,6 +48,7 @@
         s.title AS sch_title,
         s.start_at,
         s.is_shared,
+        s.user_id AS owner_id,
         p.title AS place_title,
         p.addr1,
         p.first_image,
@@ -63,6 +66,7 @@
         t.sch_title,
         MAX(t.start_at) AS start_at,
         MAX(t.is_shared) AS is_shared,
+        MAX(t.owner_id) AS owner_id,
         GROUP_CONCAT(t.place_title ORDER BY t.visit_order SEPARATOR ' / ') AS place_title,
         SUBSTRING_INDEX(GROUP_CONCAT(t.addr1 ORDER BY t.visit_order SEPARATOR '||'), '||', 1) AS addr1,
         SUBSTRING_INDEX(GROUP_CONCAT(t.first_image ORDER BY t.visit_order SEPARATOR '||'), '||', 1) AS first_image
@@ -337,11 +341,29 @@
           AND shared_user_id = #{userId}
     </delete>
 
+    <delete id="removeCompanion" parameterType="map">
+        DELETE FROM schedule_share_user
+        WHERE my_schedule_id = #{myScheduleId}
+          AND shared_user_id = #{sharedUserId}
+    </delete>
+
     <update id="markScheduleShared" parameterType="String">
         UPDATE my_schedule
         SET is_shared = 1
         WHERE my_schedule_id = #{myScheduleId}
     </update>
+
+    <update id="unmarkScheduleShared" parameterType="String">
+        UPDATE my_schedule
+        SET is_shared = 0
+        WHERE my_schedule_id = #{myScheduleId}
+    </update>
+
+    <select id="countCompanions" parameterType="String" resultType="int">
+        SELECT COUNT(*)
+        FROM schedule_share_user
+        WHERE my_schedule_id = #{myScheduleId}
+    </select>
 
     <insert id="shareToPostInsert" parameterType="com.travel.letsgospringboot.myschedule.vo.ShareVO">
         INSERT INTO schedule_post
@@ -415,7 +437,7 @@
     </select>
 
     <select id="getScheduleRoute" parameterType="String" resultMap="routeScheduleResultMap">
-        SELECT v.visit_item_id, v.visit_order, p.place_id, p.title
+        SELECT v.visit_item_id, v.visit_order, p.place_id, p.title, v.distance_to_next
         FROM my_schedule s
                  JOIN visit_item v ON s.my_schedule_id = v.schedule_id
                  JOIN place p ON v.place_id = p.place_id

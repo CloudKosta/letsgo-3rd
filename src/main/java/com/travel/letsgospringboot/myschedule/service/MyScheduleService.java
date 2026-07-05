@@ -286,6 +286,20 @@ public class MyScheduleService {
         return result;
     }
     @Transactional
+    public boolean removeCompanion(String scheduleId, String sharedUserId, String userId) {
+        if (!isScheduleOwnedByUser(scheduleId, userId))
+            throw new AccessDeniedException("권한이 없습니다");
+        boolean result = myScheduleRepository.removeCompanion(scheduleId, sharedUserId);
+        // 동반자가 모두 사라지면 공유 상태를 해제한다.
+        if (myScheduleRepository.countCompanions(scheduleId) == 0) {
+            myScheduleRepository.unmarkScheduleShared(scheduleId);
+            log.info("동반자 없음 - 공유 해제 처리, scheduleId={}", scheduleId);
+        }
+        log.info("동행자 삭제 - scheduleId={}, sharedUserId={}", scheduleId, sharedUserId);
+        return result;
+    }
+
+    @Transactional
     public boolean setCompanionPermission(CompanionPermissionVO companionPermissionVO) {
         String scheduleId = companionPermissionVO.getScheduleId();
         String sharedUserId = companionPermissionVO.getSharedUserId();
