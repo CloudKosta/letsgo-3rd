@@ -3,6 +3,7 @@ package com.travel.letsgospringboot.postschedule.controller;
 import com.travel.letsgospringboot.common.PageResponse;
 import com.travel.letsgospringboot.postschedule.service.PostScheduleService;
 import com.travel.letsgospringboot.postschedule.vo.MapScheduleTO;
+import com.travel.letsgospringboot.postschedule.vo.PostScheduleDetailTO;
 import com.travel.letsgospringboot.postschedule.vo.PostScheduleListTO;
 import com.travel.letsgospringboot.postschedule.vo.RouteScheduleTO;
 import com.travel.letsgospringboot.auth.AppUserDetails;
@@ -84,5 +85,13 @@ public class PostScheduleRestController {
     public ResponseEntity<Void> reportPostSchedule(@AuthenticationPrincipal AppUserDetails userDetails, @PathVariable("postId") String postId, @RequestBody Map<String, String> body) {
         postScheduleService.reportPostSchedule(postId, userDetails.getUsername(), body.get("reason"));
         return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @GetMapping("/{postId}/detail")
+    public PostScheduleDetailTO getPostScheduleDetail(
+            @PathVariable("postId") String postId,
+            @AuthenticationPrincipal AppUserDetails userDetails
+    ) {
+        return postScheduleService.getPostScheduleDetail(postId, userDetails.getUsername());
     }
 }
