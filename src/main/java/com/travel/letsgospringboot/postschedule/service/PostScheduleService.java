@@ -102,8 +102,13 @@ public class PostScheduleService {
     @Transactional
     public PostScheduleDetailTO getPostScheduleDetail(String postId, String loginUserId) {
         PostScheduleDetailTO detail = postScheduleRepository.getPostScheduleDetail(postId);
+
         if(detail == null || detail.getIsHidden() == 1)
             throw new PostNotFoundException("존재하지않는 게시물입니다.");
+
+        postScheduleRepository.plusView(postId);
+        detail.setViewCount(detail.getViewCount() + 1);
+
 
         boolean isOwner = loginUserId.equals(detail.getWriterId());
 
@@ -112,7 +117,7 @@ public class PostScheduleService {
         detail.setMaps(postScheduleRepository.getMapSchedule(postId));
         detail.setBudgetDetail(postScheduleRepository.getBudgetDetail(postId));
         detail.setTodoDetail(postScheduleRepository.getTodoDetail(postId));
-        postScheduleRepository.plusView(postId);
+
 
 
         return detail;
