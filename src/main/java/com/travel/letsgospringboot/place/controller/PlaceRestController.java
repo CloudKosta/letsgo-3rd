@@ -35,17 +35,17 @@ public class PlaceRestController {
         return placeService.searchPlaces("LEISURE", category, keyword, sortBy);
     }
 
-
     @GetMapping("/list/leisure")
     public PageResponse<PlaceVO> leisureList(Model model,
-                              @RequestParam(value = "category", required = false) String category,
-                              @RequestParam(value = "keyword", required = false) String keyword,
-                              @RequestParam(value = "sortOrder", defaultValue = "distance") String sortOrder,
-                              @RequestParam(value = "page", defaultValue = "1") int page,
-                              @RequestParam(value = "size", defaultValue = "12") int size) {
+            @RequestParam(value = "category", required = false) String category,
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "sortOrder", defaultValue = "distance") String sortOrder,
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "12") int size) {
 
         String sortBy = "popular".equalsIgnoreCase(sortOrder) ? "like" : "title";
-        PageResponse<PlaceVO> leisure = placeService.getPlaceListPaged("LEISURE", category, keyword, sortBy, page, size);
+        PageResponse<PlaceVO> leisure = placeService.getPlaceListPaged("LEISURE", category, keyword, sortBy, page,
+                size);
         return leisure;
     }
 
@@ -206,15 +206,6 @@ public class PlaceRestController {
         }
     }
 
-    @GetMapping("/restaurantListAjax")
-    public List<PlaceVO> getRestaurantListAjax(
-            @RequestParam(value = "sortOrder", defaultValue = "name") String sortOrder,
-            @RequestParam(value = "category", required = false) String category,
-            @RequestParam(value = "keyword", required = false) String keyword) {
-        String sortBy = "popular".equalsIgnoreCase(sortOrder) ? "like" : "title";
-        return placeService.searchPlaces("RESTAURANT", category, keyword, sortBy);
-    }
-
     @GetMapping("/stayListAjax")
     public List<PlaceVO> getStayListAjax(
             @RequestParam(value = "sortOrder", defaultValue = "name") String sortOrder,
@@ -224,17 +215,19 @@ public class PlaceRestController {
         return placeService.searchPlaces("STAY", category, keyword, sortBy);
     }
 
+    @GetMapping("/restaurantListAjax")
+    public List<PlaceVO> getRestaurantListAjax(
+            @RequestParam(value = "sortOrder", defaultValue = "name") String sortOrder,
+            @RequestParam(value = "category", required = false) String category,
+            @RequestParam(value = "keyword", required = false) String keyword) {
+        String sortBy = "popular".equalsIgnoreCase(sortOrder) ? "like" : "title";
+        return placeService.searchPlaces("RESTAURANT", category, keyword, sortBy);
+    }
+
     @GetMapping("/placeDetailAjax")
     public PlaceVO getPlaceDetail(
             @RequestParam("placeId") String placeId) {
         return placeService.getPlaceByPlaceId(placeId);
-    }
-
-    @GetMapping("/placeDetailByTitleAjax")
-    public PlaceVO getPlaceDetailByTitle(
-            @RequestParam("placeType") String placeType,
-            @RequestParam("title") String title) {
-        return placeService.getPlaceByTitle(placeType, title);
     }
 
     @GetMapping("/searchNearbyPlacesAjax")
@@ -250,14 +243,21 @@ public class PlaceRestController {
                 keyword);
     }
 
-    @GetMapping("/getPlaceCountAjax")
-    public int getPlaceCount(
-            @RequestParam("placeType") String placeType) {
-        return placeService.getPlaceCount(placeType);
+    @GetMapping("/placeDetailByTitleAjax")
+    public PlaceVO getPlaceDetailByTitle(
+            @RequestParam("placeType") String placeType,
+            @RequestParam("title") String title) {
+        return placeService.getPlaceByTitle(placeType, title);
     }
 
     @GetMapping("/getPlacesAjax")
     public List<PlaceVO> getPlaces() {
         return placeService.getPlaces();
+    }
+
+    @GetMapping("/getPlaceCountAjax")
+    public int getPlaceCount(
+            @RequestParam("placeType") String placeType) {
+        return placeService.getPlaceCount(placeType);
     }
 }
